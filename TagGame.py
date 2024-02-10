@@ -15,6 +15,7 @@ class TagGame:
         self.vec = {'left': (0, -1), 'right': (0, 1), 'down': (1, 0), 'up': (-1, 0)}
         self.side = {(0, -1): 'left', (0, 1): 'right', (1, 0): 'down', (-1, 0): 'up'}
         self.delay = delay
+        self.breakRun = False
 
         self.shuffle()
 
@@ -71,8 +72,12 @@ class TagGame:
         self.go_to(self.n ** 2 - self.n, [self.n - 2, self.n - 1])
 
         self.locker = [[0] * self.n for _ in range(self.n)]
+        self.breakRun = False
 
     def go_with_push(self, k1, k2, to1, to2):
+        if self.a[to1[0]][to1[1]] == k1 and self.a[to2[0]][to2[1]] == k2:
+            return 0
+
         buf = [to2[0] + 1, to2[1]] if k1 + 1 == k2 else [to2[0], to2[1] + 1]
 
         self.go_to(k2, [to2[0] + 2, to2[1]] if k1 + 1 == k2 else [to2[0], to2[1] + 2])
@@ -92,20 +97,23 @@ class TagGame:
         self.locker[buf[0]][buf[1]] = 0
 
     def go_to(self, k, to):
+        if self.breakRun:
+            return False
+
         xk, yk = [(i, self.a[i].index(k)) for i in range(self.n) if k in self.a[i]][0]
 
         while [xk, yk] != to:
             s0 = self.way([xk, yk], to)[0]
             self.locker[xk][yk] = 1
             for p in self.way([self.void[0], self.void[1]], [xk + s0[0], yk + s0[1]]):
-                self.step(self.side[p])
-                self.show()
-                time.sleep(self.delay)
+                if not self.breakRun:
+                    self.step(self.side[p])
+                    self.wait()
 
             self.locker[xk][yk] = 0
-            self.step(self.side[(-s0[0], -s0[1])])
-            self.show()
-            time.sleep(self.delay)
+            if not self.breakRun:
+                self.step(self.side[(-s0[0], -s0[1])])
+                self.wait()
             xk, yk = xk + s0[0], yk + s0[1]
 
     def way(self, p1, p2):
@@ -124,8 +132,6 @@ class TagGame:
                             m[i][j] = min(m[i][j], m[i + v[0]][j + v[1]] + 1)
 
         if m[p1[0]][p1[1]] == self.n ** 2:
-            print('Way is not found')
-            input()
             return []
 
         pos, w = p1, []
@@ -137,4 +143,24 @@ class TagGame:
                         w.append(v)
 
         return w
+
+    def wait(self):
+        msec = 0
+        while msec < self.delay:
+            time.sleep(0.001)
+            self.show()
+            msec += 1
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+
+                if event.type == pygame.KEYDOWN and event.key in [pygame.K_ESCAPE, pygame.K_RETURN]:
+                    self.breakRun = True
+
+            if pygame.key.get_pressed()[pygame.K_UP] and self.delay > 0.001:
+                self.delay *= 0.99
+
+            if pygame.key.get_pressed()[pygame.K_DOWN] and self.delay < 500:
+                self.delay *= 1.01
 

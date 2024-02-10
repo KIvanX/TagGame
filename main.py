@@ -5,11 +5,12 @@ from TagGame import TagGame
 
 N = 8
 A = 80
+SPEED = 0.01
 pygame.init()
 screen = pygame.display.set_mode((N * A, N * A))
 pygame.display.set_caption(f"Пятнашки {N}X{N}")
 
-tagGame = TagGame(N, A, screen, 0.01)
+tagGame = TagGame(N, A, screen, 1 / SPEED)
 
 game = True
 while game:
@@ -42,7 +43,7 @@ while game:
                 N = event.key - 48
                 screen = pygame.display.set_mode((N * A, N * A))
                 pygame.display.set_caption(f"Пятнашки {N}X{N}")
-                tagGame = TagGame(N, A, screen, 0.01)
+                tagGame = TagGame(N, A, screen, 1 / SPEED)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             y, x = pygame.mouse.get_pos()
